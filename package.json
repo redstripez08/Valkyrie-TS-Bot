@@ -1,0 +1,30 @@
+{
+  "name": "calnatsci-discord-bot-ts",
+  "version": "1.0.0",
+  "description": "CalNatSci Discord Bot",
+  "main": "index.ts",
+  "scripts": {
+    "start": "SET NODE_ENV=production && node -r dotenv/config ./dist/index.min.js",
+    "tsc:build": "tsc",
+    "tsc:watch": "tsc --watch",
+    "ts": "SET NODE_ENV=dev && ts-node -r dotenv/config ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redstripez08/CalNatSci-Discord-Bot-TS.git"
+  },
+  "author": "Angelo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redstripez08/CalNatSci-Discord-Bot-TS/issues"
+  },
+  "homepage": "https://github.com/redstripez08/CalNatSci-Discord-Bot-TS#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "discord.js": "^12.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.20",
+    "dotenv": "^8.2.0"
+  }
+}
