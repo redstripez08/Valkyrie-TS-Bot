@@ -1,7 +1,7 @@
 {
-  "name": "calnatsci-discord-bot-ts",
-  "version": "1.0.0",
-  "description": "CalNatSci Discord Bot",
+  "name": "valkyrie-ts-bot",
+  "version": "1.0.1",
+  "description": "Valkyrie Discord Bot",
   "main": "./dist/index.js",
   "scripts": {
     "start": "SET NODE_ENV=production && node .",
