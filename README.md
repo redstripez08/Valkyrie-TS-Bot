@@ -1,2 +1,4 @@
 # CalNatSci-Discord-Bot-TS
-CalNatSci Bot coded in TypeScript
+CalNatSci Discord Bot coded in TypeScript.
+
+Does a bunch of stuff.
