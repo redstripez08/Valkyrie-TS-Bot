@@ -2,12 +2,17 @@
   "name": "calnatsci-discord-bot-ts",
   "version": "1.0.0",
   "description": "CalNatSci Discord Bot",
-  "main": "index.ts",
+  "main": "./dist/index.js",
   "scripts": {
-    "start": "SET NODE_ENV=production && node -r dotenv/config ./dist/index.min.js",
+    "start": "SET NODE_ENV=production && node .",
+    "test": "SET NODE_ENV=dev && node -r dotenv/config --trace-deprecation --trace-warnings --trace-uncaught --unhandled-rejections=warn .",
+    "ts:start": "SET NODE_ENV=dev && ts-node -r dotenv/config ./src/index.ts",
     "tsc:build": "tsc",
-    "tsc:watch": "tsc --watch",
-    "ts": "SET NODE_ENV=dev && ts-node -r dotenv/config ."
+    "tsc:watch": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=14.15.0",
+    "npm": ">=6.14.0"
   },
   "repository": {
     "type": "git",
@@ -21,10 +26,16 @@
   "homepage": "https://github.com/redstripez08/CalNatSci-Discord-Bot-TS#readme",
   "dependencies": {
     "axios": "^0.21.1",
-    "discord.js": "^12.5.1"
+    "discord.js": "^12.5.1",
+    "luxon": "^1.25.0"
   },
   "devDependencies": {
+    "@types/luxon": "^1.25.0",
     "@types/node": "^14.14.20",
     "dotenv": "^8.2.0"
+  },
+  "_globalDependencies": {
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
   }
 }
