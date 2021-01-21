@@ -1,29 +1,30 @@
 import * as Discord from "discord.js";
-import * as qs from "querystring";
 import { DateTime } from "luxon";
 import axios, { AxiosResponse } from "axios";
-import { Command, Link } from "../../typings/types";
-
-interface UD_Response {
-    definition: string;
-    permalink: string;
-    thumbs_up: number;
-    sound_urls: Array<any>;
-    author: string;
-    word: string;
-    defid: number;
-    current_vote: string;
-    written_on: string;
-    example: string;
-    thumbs_down: number;
-
-}
+import { Command } from "../../typings/types";
+import { axiosErrorHandler, charChecker } from "../../utils";
+import Link from "../../classes/Link";
+const { TIMEZONE = "UTC" } = process.env;
 
 interface Response extends AxiosResponse {
-    data: { list: Array<UD_Response> } 
+    data: {
+        list: Array<{
+            definition: string;
+            permalink: string;
+            thumbs_up: number;
+            sound_urls: Array<any>;
+            author: string;
+            word: string;
+            defid: number;
+            current_vote: string;
+            written_on: string;
+            example: string;
+            thumbs_down: number;        
+        }>
+    } 
 }
 
-const command: Command = {
+export default {
     name: "ud",
     aliases: ["urban", "udict"],
     description: "Urban Dictionary",
@@ -34,44 +35,41 @@ const command: Command = {
     rolesRequired: [],
     async execute(message, args) {
         try {
-            const link: Link = new URL("https://api.urbandictionary.com/v0/define");
-            link.search = qs.stringify({term: args.join(" ")});
-            link.options = {
-                headers: {"Accept": "application/json"},
-            };
+            const link = new Link("https://api.urbandictionary.com/v0/define", {
+                querystring: {term: args.join(" ")},
+                headers: {"Accept": "application/json"}
+            });
             
-            const { data }: Response = await axios.get(link.href, link.options);
+            const { data }: Response = await axios.get(link.href, {headers: link.headers});
             if (!data.list.length) return message.channel.send("No Results Found!");
 
+            // UD API returns an array. This gets the highest-ranked one.
             const ud_res = data.list[0];
-            const charChecker = (str: string, max: number = 2048): string => str.length > max ? `${str.slice(0, max - 3)}...` : str;
-            const date = DateTime.fromISO(ud_res.written_on).toLocaleString({month: "short", day: "numeric", year: "numeric"});
+            // Formats ISO Dates to be human-readble
+            const date = DateTime.fromISO(ud_res.written_on).setZone(TIMEZONE).toFormat("yyyy LLL dd, t");
             
-            // Replaces [ud links] with actual links
+            // Links in UD are represented by a word bein encapsulated in square brackets, [like this]
+            // This Replaces [ud links] with Discord Valid links
             const ud_links = /\[(\w| |\d){0,}\]/gi
             const linkMatches = ud_res.definition.match(ud_links) || [];
             const exLinkMatches = ud_res.example.match(ud_links) || [];
-            let definition = ud_res.definition;
-            let example = ud_res.example;
 
-            if (linkMatches.length) {
-                for (const link of linkMatches) {
-                    const linkWord = link.slice(1, -1);                    
-                    const regex = new RegExp(`\\[${linkWord}\\]`);
-                    const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
-                    definition = definition.replace(regex, embedLink);
+            function swapLinks(matches: RegExpMatchArray, str: string): string {
+                if (matches.length) {
+                    for (const link of matches) {
+                        // Removes brackets surrounding word
+                        const linkWord = link.slice(1, -1);
+                        const regex = new RegExp(`\\[${linkWord}\\]`);
+                        const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
+                        str = str.replace(regex, embedLink);
+                    }
                 }
+                return str;
             }
 
-            if (exLinkMatches.length) {
-                for (const link of exLinkMatches) {
-                    const linkWord = link.slice(1, -1);                    
-                    const regex = new RegExp(`\\[${linkWord}\\]`);
-                    const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
-                    example = example.replace(regex, embedLink);
-                }
-            }
-            
+            const definition = swapLinks(linkMatches, ud_res.definition);
+            const example = swapLinks(exLinkMatches, ud_res.example);
+                        
             const embed = new Discord.MessageEmbed()
                 .setTitle(ud_res.word)
                 .setURL(ud_res.permalink)
@@ -83,16 +81,7 @@ const command: Command = {
             
             message.channel.send(embed);
         } catch (error) {
-            if (error.response) {
-                console.error(error);
-                console.error(error.response);
-                message.channel.send(`There was an error!\n\`${error.response.status} || ${error.response.statusText}`);
-            } else {
-                console.error(error);
-                message.channel.send(`There was an error!\n\`${error}\``)
-            }
+            axiosErrorHandler(message, error);
         }
     }
-};
-
-module.exports = command;
+} as Command;
