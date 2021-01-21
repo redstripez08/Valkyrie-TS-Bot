@@ -27,6 +27,7 @@ const luxon_1 = require("luxon");
 const axios_1 = __importDefault(require("axios"));
 const utils_1 = require("../../utils");
 const Link_1 = __importDefault(require("../../classes/Link"));
+const { TIMEZONE = "UTC" } = process.env;
 exports.default = {
     name: "ud",
     aliases: ["urban", "udict"],
@@ -46,7 +47,7 @@ exports.default = {
             if (!data.list.length)
                 return message.channel.send("No Results Found!");
             const ud_res = data.list[0];
-            const date = luxon_1.DateTime.fromISO(ud_res.written_on).setZone("Asia/Manila").toFormat("yyyy LLL dd, t");
+            const date = luxon_1.DateTime.fromISO(ud_res.written_on).setZone(TIMEZONE).toFormat("yyyy LLL dd, t");
             const ud_links = /\[(\w| |\d){0,}\]/gi;
             const linkMatches = ud_res.definition.match(ud_links) || [];
             const exLinkMatches = ud_res.example.match(ud_links) || [];
@@ -58,11 +59,8 @@ exports.default = {
                         const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
                         str = str.replace(regex, embedLink);
                     }
-                    return str;
                 }
-                else {
-                    throw new Error("Match Array needs to have length!");
-                }
+                return str;
             }
             const definition = swapLinks(linkMatches, ud_res.definition);
             const example = swapLinks(exLinkMatches, ud_res.example);

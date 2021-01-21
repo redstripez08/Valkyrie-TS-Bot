@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.axiosErrorHandler = void 0;
-const axiosErrorHandler = (message, err) => {
+function default_1(message, err) {
     if (err.response) {
         console.error(err.response);
         message.channel.send(`There was an error!\n\`${err.response.status} || ${err.response.statusText}\n${err.response.data.error}\``);
@@ -14,5 +13,5 @@ const axiosErrorHandler = (message, err) => {
         console.error(err);
         message.channel.send(`There was an error!\n\`${err}\``);
     }
-};
-exports.axiosErrorHandler = axiosErrorHandler;
+}
+exports.default = default_1;

@@ -22,10 +22,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Discord = __importStar(require("discord.js"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const checkNodeEnv_1 = require("./utils/checkNodeEnv");
+const utils_1 = require("./utils");
 const luxon_1 = require("luxon");
 const { version } = require("../package.json");
-console.log(`Environment: ${checkNodeEnv_1.EnvChecker("dev") ? "Development" : "Production"}`);
+console.log(`Environment: ${utils_1.checkNodeEnv("dev") ? "Development" : "Production"}`);
 console.log("Initializing Client...");
 const client = new Discord.Client({ ws: { intents: Discord.Intents.ALL } });
 const { PREFIX = "v!", TOKEN } = process.env;
@@ -47,6 +47,14 @@ const commands = client.commands = new Discord.Collection();
         }
     }
     client.on("ready", () => {
+        for (const commandFile of commandFiles.ready) {
+            try {
+                require(path.resolve(__dirname, `./commands/ready/${commandFile}`)).default(client);
+            }
+            catch (err) {
+                throw new Error("ReadyCommandExecutorError: " + err);
+            }
+        }
         client.user?.setActivity(`${PREFIX}help`, { type: "LISTENING" });
         console.log(`${client.user?.username} v${version} Ready\n`);
     });
@@ -62,6 +70,9 @@ const commands = client.commands = new Discord.Collection();
             return;
         if (command.argsRequired && !args.length) {
             return message.channel.send("Args Required!");
+        }
+        if (command.guildOnly && message.channel.type !== "text") {
+            return message.channel.send(`\`${command.name}\` can only be executed in servers!`);
         }
         try {
             command.execute(message, args);
