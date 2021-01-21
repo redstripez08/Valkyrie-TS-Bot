@@ -23,10 +23,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Discord = __importStar(require("discord.js"));
-const qs = __importStar(require("querystring"));
 const luxon_1 = require("luxon");
 const axios_1 = __importDefault(require("axios"));
-const command = {
+const utils_1 = require("../../utils");
+const Link_1 = __importDefault(require("../../classes/Link"));
+exports.default = {
     name: "ud",
     aliases: ["urban", "udict"],
     description: "Urban Dictionary",
@@ -37,51 +38,46 @@ const command = {
     rolesRequired: [],
     async execute(message, args) {
         try {
-            const link = new URL("https://api.urbandictionary.com/v0/define");
-            link.search = qs.stringify({ term: args.join(" ") });
-            link.options = {
-                headers: { "Accept": "application/json" },
-            };
-            const { data } = await axios_1.default.get(link.href, link.options);
+            const link = new Link_1.default("https://api.urbandictionary.com/v0/define", {
+                querystring: { term: args.join(" ") },
+                headers: { "Accept": "application/json" }
+            });
+            const { data } = await axios_1.default.get(link.href, { headers: link.headers });
             if (!data.list.length)
                 return message.channel.send("No Results Found!");
             const ud_res = data.list[0];
-            const charChecker = (str, max = 2048) => str.length > max ? `${str.slice(0, max - 3)}...` : str;
-            const date = luxon_1.DateTime.fromISO(ud_res.written_on).toLocaleString({ month: "short", day: "numeric", year: "numeric" });
+            const date = luxon_1.DateTime.fromISO(ud_res.written_on).setZone("Asia/Manila").toFormat("yyyy LLL dd, t");
             const ud_links = /\[(\w| |\d){0,}\]/gi;
             const linkMatches = ud_res.definition.match(ud_links) || [];
             const exLinkMatches = ud_res.example.match(ud_links) || [];
-            let definition = ud_res.definition;
-            let example = ud_res.example;
-            if (linkMatches.length) {
-                for (const link of linkMatches) {
-                    const linkWord = link.slice(1, -1);
-                    const regex = new RegExp(`\\[${linkWord}\\]`);
-                    const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
-                    definition = definition.replace(regex, embedLink);
+            function swapLinks(matches, str) {
+                if (matches.length) {
+                    for (const link of matches) {
+                        const linkWord = link.slice(1, -1);
+                        const regex = new RegExp(`\\[${linkWord}\\]`);
+                        const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
+                        str = str.replace(regex, embedLink);
+                    }
+                    return str;
+                }
+                else {
+                    throw new Error("Match Array needs to have length!");
                 }
             }
-            if (exLinkMatches.length) {
-                for (const link of exLinkMatches) {
-                    const linkWord = link.slice(1, -1);
-                    const regex = new RegExp(`\\[${linkWord}\\]`);
-                    const embedLink = `[${linkWord}](https://www.urbandictionary.com/define.php?term=${linkWord.replace(/ /g, "%20")})`;
-                    example = example.replace(regex, embedLink);
-                }
-            }
+            const definition = swapLinks(linkMatches, ud_res.definition);
+            const example = swapLinks(exLinkMatches, ud_res.example);
             const embed = new Discord.MessageEmbed()
                 .setTitle(ud_res.word)
                 .setURL(ud_res.permalink)
                 .setAuthor("Author: " + ud_res.author)
                 .setColor("#ffa500")
-                .setDescription(charChecker(definition))
-                .addField("Example", charChecker(example, 1024))
+                .setDescription(utils_1.charChecker(definition))
+                .addField("Example", utils_1.charChecker(example, 1024))
                 .setFooter(`${ud_res.thumbs_up} 👍\t${ud_res.thumbs_down} 👎\nWritten on: ${date}`);
             message.channel.send(embed);
         }
-        catch (err) {
-            console.error(err);
+        catch (error) {
+            utils_1.axiosErrorHandler(message, error);
         }
     }
 };
-module.exports = command;

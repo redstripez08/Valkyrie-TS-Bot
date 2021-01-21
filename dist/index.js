@@ -23,11 +23,12 @@ const Discord = __importStar(require("discord.js"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const checkNodeEnv_1 = require("./utils/checkNodeEnv");
+const luxon_1 = require("luxon");
 const { version } = require("../package.json");
-console.log(`${checkNodeEnv_1.EnvChecker("dev") ? "Development" : "Production"} Environment`);
+console.log(`Environment: ${checkNodeEnv_1.EnvChecker("dev") ? "Development" : "Production"}`);
 console.log("Initializing Client...");
 const client = new Discord.Client({ ws: { intents: Discord.Intents.ALL } });
-const { PREFIX = "cn!", TOKEN } = process.env;
+const { PREFIX = "v!", TOKEN } = process.env;
 if (!TOKEN)
     throw new Error("Token Not Found!");
 const commands = client.commands = new Discord.Collection();
@@ -37,30 +38,39 @@ const commands = client.commands = new Discord.Collection();
         ready: (await fs.promises.readdir(path.resolve(__dirname, "./commands/ready/"))).filter(file => /.js$|.ts$/.test(file)),
     };
     for (const commandFile of commandFiles.base) {
-        const command = require(path.resolve(__dirname, `./commands/base/${commandFile}`));
-        commands.set(command.name, command);
+        try {
+            const command = require(path.resolve(__dirname, `./commands/base/${commandFile}`)).default;
+            commands.set(command.name, command);
+        }
+        catch (err) {
+            throw new Error("FileHandlerError: " + err);
+        }
     }
     client.on("ready", () => {
         client.user?.setActivity(`${PREFIX}help`, { type: "LISTENING" });
-        console.log(`${client.user?.username} v${version} ready`);
+        console.log(`${client.user?.username} v${version} Ready\n`);
     });
     client.on("message", message => {
         if (!message.content.toLowerCase().startsWith(PREFIX) || message.author.bot)
             return;
-        const args = message.content.slice(PREFIX.length).split(/ +/g);
+        const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
         const commandName = args.shift()?.toLowerCase();
         if (!commandName)
             return;
         const command = commands.get(commandName) || commands.find(cmd => cmd.aliases.includes(commandName));
         if (!command)
             return;
+        if (command.argsRequired && !args.length) {
+            return message.channel.send("Args Required!");
+        }
         try {
             command.execute(message, args);
         }
         catch (err) {
-            console.error(err);
-            message.channel.send(`There was an error!:\n\`${err}\``);
+            const errMsg = `[${luxon_1.DateTime.fromJSDate(new Date()).toUTC()}] IndexError:\t${err}`;
+            console.error(errMsg);
+            message.channel.send(`**There was an error!**\n\`${err}\``);
         }
     });
-    client.login(TOKEN);
+    client.login(TOKEN).catch(err => { throw new Error("LoginError: " + err); });
 })();

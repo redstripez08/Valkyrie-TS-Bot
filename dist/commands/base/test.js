@@ -1,6 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const command = {
+const sequelize_1 = require("sequelize");
+const sql = new sequelize_1.Sequelize("mysql://root:password@localhost:3306/newtest", {});
+class Test extends sequelize_1.Model {
+}
+Test.init({}, { sequelize: sql, modelName: "Test" });
+exports.default = {
     name: "test",
     aliases: ["t"],
     description: "Test",
@@ -9,8 +14,13 @@ const command = {
     guildOnly: false,
     argsRequired: false,
     rolesRequired: [],
-    execute(message, args) {
-        message.channel.send("no " + args.join(" "));
+    async execute(message, args) {
+        try {
+            await sql.authenticate();
+            console.log("establisjed");
+        }
+        catch (err) {
+            console.error(err);
+        }
     }
 };
-module.exports = command;
