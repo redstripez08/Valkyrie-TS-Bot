@@ -1,11 +1,11 @@
 {
   "name": "valkyrie-ts-bot",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "Valkyrie Discord Bot",
   "main": "./dist/index.js",
   "scripts": {
-    "start": "SET NODE_ENV=production && node .",
-    "test": "SET NODE_ENV=dev && node -r dotenv/config --trace-deprecation --trace-warnings --trace-uncaught --unhandled-rejections=warn .",
+    "start": "SET NODE_ENV=production && --unhandled-rejections=strict node .",
+    "dev:start": "SET NODE_ENV=dev && node -r dotenv/config --trace-deprecation --trace-warnings --trace-uncaught --unhandled-rejections=warn .",
     "ts:start": "SET NODE_ENV=dev && ts-node -r dotenv/config ./src/index.ts",
     "tsc:build": "tsc",
     "tsc:watch": "tsc --watch"
@@ -27,11 +27,17 @@
   "dependencies": {
     "axios": "^0.21.1",
     "discord.js": "^12.5.1",
-    "luxon": "^1.25.0"
+    "keyv": "^4.0.3",
+    "lodash": "^4.17.20",
+    "luxon": "^1.25.0",
+    "mysql2": "^2.2.5",
+    "sequelize": "^6.3.5"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.167",
     "@types/luxon": "^1.25.0",
     "@types/node": "^14.14.20",
+    "@types/sequelize": "^4.28.9",
     "dotenv": "^8.2.0"
   },
   "_globalDependencies": {
