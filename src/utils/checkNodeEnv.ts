@@ -1,2 +1,5 @@
 type EnvStates = "production" | "dev";
-export const EnvChecker = (envState: EnvStates): Boolean => process.env.NODE_ENV?.trim() === envState;
+/** Checks Node Environment. */
+export default function (envState: EnvStates): Boolean {
+    return process.env.NODE_ENV?.toLowerCase().trim() === envState;
+}
